@@ -1,0 +1,235 @@
+' Meter Clock Dial
+' Jaycar QP5020 Analog meter
+' Marco Colli Jul 2022
+
+' Set up overall positioning
+ZoomIni = 1
+' Global definitions
+%PW == 52.3	' Plate width
+%PH == 32	' Plate Height
+%RL == 10	' registration mark length
+%PS == %RL * 2	' Plate spacing for multiple up
+%HS = 33	' hole spacing
+%HH = 3.6	' hole height from bottom
+%HD = 2.5	' hole diameter
+%AA == 75	' arc total angle	
+%AR == 22	' arc radius
+%ACO == -5	' arc center offset
+%TXTH == %AR-7	' Text height from base
+%TAD == 6	' text to arc distance for scales
+Police=Arial
+%CTCol = N 'Cyan	' color for CT rectangle
+%DCol = N 'rouge	' Decal colour
+
+' Import image for copying
+' Comment out when completed!
+'Image =QP5020_Faceplate.jpg,0,0,Z§%PW§%PH,X
+
+' MINUTES PLATE
+'--------------------
+CT = %PW, %PH, Noir	      ' x,y needle axis position
+RefCur = %CTx, %CTy
+
+' Draw the plate characteristics
+Cadre = -%PW/2,%PH,%PW/2,0,%CTCol  ' plate area		
+Trait=-%PW/2,%PH,-%PW/2-%RL,%PH,,Noir    '  top registration marks
+Trait=-%PW/2,%PH,-%PW/2,%PH+%RL,,Noir
+Trait=%PW/2,%PH,%PW/2+%RL,%PH,,Noir
+Trait=%PW/2,%PH,%PW/2,%PH+%RL,,Noir
+Trait=-%PW/2,0,-%PW/2-%RL,0,,Noir         ' bottom registration marks
+Trait=-%PW/2,0,-%PW/2,-%RL,,Noir
+Trait=%PW/2,0,%PW/2+%RL,0,,Noir
+Trait=%PW/2,0,%PW/2,-%RL,,Noir
+
+Percer = -%HS/2,%HH,%HD,  ' left hole location
+Percer = %HS/2,%HH,%HD,  ' right hole location
+
+' Draw and label the simple scale
+Decal = %ACO,%DCol 		' arc center offset
+Arc = 90-%AA/2,90+%AA/2, %AR	' arc
+Grad = 60, 1,,,0.1mm	' minor graduations
+Grad = 12, 2,,,0.15mm	' mid graduations
+Grad = 6, 3,,,0.25mm	' major graduations		
+TailleP = *1.3 G
+Val = 6, 0, 60, %TAD		' labels
+
+' Text
+TailleP= *3
+Texte = 0,%TXTH,,CG,M
+
+' 12 HOURS PLATE
+'----------------------
+CT = %CTx+%PW+%PS, %CTy, Noir      ' x,y needle axis position
+RefCur = %CTx, %CTy
+
+' Draw the plate characteristics
+Cadre = -%PW/2,%PH,%PW/2,0,%CTCol  ' plate area		
+Trait=-%PW/2,%PH,-%PW/2-%RL,%PH,,Noir    '  top registration marks
+Trait=-%PW/2,%PH,-%PW/2,%PH+%RL,,Noir
+Trait=%PW/2,%PH,%PW/2+%RL,%PH,,Noir
+Trait=%PW/2,%PH,%PW/2,%PH+%RL,,Noir
+Trait=-%PW/2,0,-%PW/2-%RL,0,,Noir         ' bottom registration marks
+Trait=-%PW/2,0,-%PW/2,-%RL,,Noir
+Trait=%PW/2,0,%PW/2+%RL,0,,Noir
+Trait=%PW/2,0,%PW/2,-%RL,,Noir
+
+Percer = -%HS/2,%HH,%HD,  ' left hole location
+Percer = %HS/2,%HH,%HD,  ' right hole location
+
+' Draw and label the simple scale
+Decal = %ACO,%DCol	 	' arc center offset
+Arc = 90-%AA/2,90+%AA/2, %AR	' arc
+Grad = 12, 1.5,,,0.1mm	' minor graduations
+Grad = 4, 3,,,0.25mm	' major graduations		
+TailleP = *1.3 G
+Val = 4, 0, 12, %TAD		' labels
+
+' Text
+TailleP= *3
+Texte = 0,%TXTH,,CG,H
+
+' 24 HOURS PLATE
+'----------------------
+CT = %PW,%CTy+%PH+%PS, Noir      ' x,y needle axis position
+RefCur = %CTx, %CTy
+
+' Draw the plate characteristics
+Cadre = -%PW/2,%PH,%PW/2,0,%CTCol  ' plate area		
+Trait=-%PW/2,%PH,-%PW/2-%RL,%PH,,Noir    '  top registration marks
+Trait=-%PW/2,%PH,-%PW/2,%PH+%RL,,Noir
+Trait=%PW/2,%PH,%PW/2+%RL,%PH,,Noir
+Trait=%PW/2,%PH,%PW/2,%PH+%RL,,Noir
+Trait=-%PW/2,0,-%PW/2-%RL,0,,Noir         ' bottom registration marks
+Trait=-%PW/2,0,-%PW/2,-%RL,,Noir
+Trait=%PW/2,0,%PW/2+%RL,0,,Noir
+Trait=%PW/2,0,%PW/2,-%RL,,Noir
+
+Percer = -%HS/2,%HH,%HD,  ' left hole location
+Percer = %HS/2,%HH,%HD,  ' right hole location
+
+' Draw and label the simple scale
+Decal = %ACO,%DCol	 	' arc center offset
+Arc = 90-%AA/2,90+%AA/2, %AR	' arc
+Grad = 24, 1.5,,,0.1mm	' minor graduations
+Grad = 6, 3,,,0.25mm	' major graduations		
+TailleP = *1.3 G
+Val = 6, 0, 24, %TAD		' labels
+
+' Text
+TailleP= *3
+Texte = 0,%TXTH,,CG,H
+
+' DoW PLATE
+'---------------
+CT =%CTx+%PW+%PS, %CTy, Noir      ' x,y needle axis position
+RefCur = %CTx, %CTy
+
+' Draw the plate characteristics
+Cadre = -%PW/2,%PH,%PW/2,0,%CTCol  ' plate area		
+Trait=-%PW/2,%PH,-%PW/2-%RL,%PH,,Noir    '  top registration marks
+Trait=-%PW/2,%PH,-%PW/2,%PH+%RL,,Noir
+Trait=%PW/2,%PH,%PW/2+%RL,%PH,,Noir
+Trait=%PW/2,%PH,%PW/2,%PH+%RL,,Noir
+Trait=-%PW/2,0,-%PW/2-%RL,0,,Noir         ' bottom registration marks
+Trait=-%PW/2,0,-%PW/2,-%RL,,Noir
+Trait=%PW/2,0,%PW/2+%RL,0,,Noir
+Trait=%PW/2,0,%PW/2,-%RL,,Noir
+
+Percer = -%HS/2,%HH,%HD,  ' left hole location
+Percer = %HS/2,%HH,%HD,  ' right hole location
+
+' Draw and label the simple scale
+Decal = %ACO,%DCol	 	' arc center offset
+Arc = 90-%AA/2,90+%AA/2, %AR	' arc
+Grad = 6, 3,,,0.25mm	' major graduations		
+%TICK == 100/6		' one tick percentage of scale
+TailleP = *1.3 G
+Val1R =,0*%TICK,Mo,%TAD	' labels
+Val1R =,1*%TICK,Tu,%TAD	' labels
+Val1R =,2*%TICK,We,%TAD	' labels
+Val1R =,3*%TICK,Th,%TAD	' labels
+Val1R =,4*%TICK,Fr,%TAD	' labels
+Val1R =,5*%TICK,Sa,%TAD	' labels
+Val1R =,6*%TICK,Su,%TAD	' labels
+
+' Text
+TailleP= *3
+Texte = 0,%TXTH,,CG,DW
+
+' DATE PLATE
+'----------------
+CT =  %PW, %CTy+%PH+%PS, Noir      ' x,y needle axis position
+RefCur = %CTx, %CTy
+
+' Draw the plate characteristics
+Cadre = -%PW/2,%PH,%PW/2,0,%CTCol  ' plate area		
+Trait=-%PW/2,%PH,-%PW/2-%RL,%PH,,Noir    '  top registration marks
+Trait=-%PW/2,%PH,-%PW/2,%PH+%RL,,Noir
+Trait=%PW/2,%PH,%PW/2+%RL,%PH,,Noir
+Trait=%PW/2,%PH,%PW/2,%PH+%RL,,Noir
+Trait=-%PW/2,0,-%PW/2-%RL,0,,Noir         ' bottom registration marks
+Trait=-%PW/2,0,-%PW/2,-%RL,,Noir
+Trait=%PW/2,0,%PW/2+%RL,0,,Noir
+Trait=%PW/2,0,%PW/2,-%RL,,Noir
+
+Percer = -%HS/2,%HH,%HD,  ' left hole location
+Percer = %HS/2,%HH,%HD,  ' right hole location
+
+' Draw and label the simple scale
+Decal = %ACO,%DCol	 	' arc center offset
+Arc = 90-%AA/2,90+%AA/2, %AR	' arc
+Grad = 30, 1.5,,,0.25mm	' minor graduations		
+Grad = 6, 3,,,0.25mm	' major graduations		
+TailleP = *1.3 G
+Val =6, 1, 31, %TAD*1	' labels
+'Val = 15, 17, 32, %TAD*1.5	' labels
+
+' Text
+TailleP= *3
+Texte = 0,%TXTH,,CG,DD
+
+' MONTH PLATE
+'------------------
+CT = %CTx+%PW+%PS, %CTy, Noir      ' x,y needle axis position
+RefCur = %CTx, %CTy
+
+' Draw the plate characteristics
+Cadre = -%PW/2,%PH,%PW/2,0,%CTCol  ' plate area		
+Trait=-%PW/2,%PH,-%PW/2-%RL,%PH,,Noir    '  top registration marks
+Trait=-%PW/2,%PH,-%PW/2,%PH+%RL,,Noir
+Trait=%PW/2,%PH,%PW/2+%RL,%PH,,Noir
+Trait=%PW/2,%PH,%PW/2,%PH+%RL,,Noir
+Trait=-%PW/2,0,-%PW/2-%RL,0,,Noir         ' bottom registration marks
+Trait=-%PW/2,0,-%PW/2,-%RL,,Noir
+Trait=%PW/2,0,%PW/2+%RL,0,,Noir
+Trait=%PW/2,0,%PW/2,-%RL,,Noir
+
+Percer = -%HS/2,%HH,%HD,  ' left hole location
+Percer = %HS/2,%HH,%HD,  ' right hole location
+
+' Draw and label the simple scale
+Decal = %ACO,%DCol	 	' arc center offset
+Arc = 90-%AA/2,90+%AA/2, %AR	' arc
+Grad = 11, 3,,,0.25mm	' major graduations		
+%TICK == 100/11		' one tick percentage of scale
+TailleP = *1 G
+Val1R =,0*%TICK,Jan,%TAD*1	' labels
+Val1R =,1*%TICK,Feb,%TAD*1.5	' labels
+Val1R =,2*%TICK,Mar,%TAD*1	' labels
+Val1R =,3*%TICK,Apr,%TAD*1.5	' labels
+Val1R =,4*%TICK,May,%TAD*1	' labels
+Val1R =,5*%TICK,Jun,%TAD*1.5	' labels
+Val1R =,6*%TICK,Jul,%TAD*1	
+Val1R =,7*%TICK,Aug,%TAD*1.5	' labels
+Val1R =,8*%TICK,Sep,%TAD*1	' labels
+Val1R =,9*%TICK,Oct,%TAD*1.5	' labels
+Val1R =,10*%TICK,Nov,%TAD*1	' labels
+Val1R =,11*%TICK,Dec,%TAD*1.5	' labels
+
+' Text
+TailleP= *3
+Texte = 0,%TXTH,,CG,MM
+
+
+
+
