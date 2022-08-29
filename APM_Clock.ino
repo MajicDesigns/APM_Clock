@@ -183,12 +183,12 @@ uint8_t daysInMonth(uint8_t month)
     return(days);
 }
 
-uint8_t currentHour(uint8_t h)
+uint8_t adjustedHour(uint8_t h)
 // Change the RTC hour to include any summer time offset
 // Clock always holds the 'real' time.
 { 
-  if (h > 12) h -= 12;
   h += (isSummerMode() ? 1 : 0);
+  if (h > HR_PER_DAY/2) h -= HR_PER_DAY/2;
 
   return(h);
 }
@@ -196,7 +196,7 @@ uint8_t currentHour(uint8_t h)
 void dumpTime()
 // Show displayed time to the debug display
 {
-  uint8_t h = currentHour(RTC.h);
+  uint8_t h = adjustedHour(RTC.h);
 
   PRINTS("\nT: ");
   if (h < 10) PRINT("0", h); else PRINT("", h);
@@ -237,10 +237,12 @@ void setDisplays(uint8_t pwmValue)
 
 void updateClock(uint8_t h, uint8_t m, uint8_t dw, uint8_t dd, uint8_t mm)
 {
+#if DEBUG
   dumpTime();  // debug output only
+#endif
 
   //PRINTS("\nH "); 
-  showTime(currentHour(h), PIN_H, sizeof(PWM_H), PWM_H);
+  showTime(adjustedHour(h), PIN_H, sizeof(PWM_H), PWM_H);
   //PRINTS("\nM "); 
   showTime(m, PIN_M, sizeof(PWM_M), PWM_M);
   //PRINTS("\nDW "); 
@@ -327,7 +329,7 @@ bool configTime(uint8_t& h, uint8_t& m, uint8_t& dw, uint8_t& dd, uint8_t& mm)
       break;
 
     case PIN_H:    // hours
-      showTime(currentHour(h), PIN_H, sizeof(PWM_H), PWM_H);
+      showTime(adjustedHour(h), PIN_H, sizeof(PWM_H), PWM_H);
       showTime(RTC.h >= 12 ? 59 : 0, PIN_M, sizeof(PWM_M), PWM_M);   // show AM or PM
       if (key == MD_UISwitch::KEY_PRESS)
       {
@@ -379,7 +381,8 @@ void setup(void)
   // set up switch management
   swMode.begin();
   swMode.enableRepeat(false);
-  swSet.begin();
+  swMode.enableLongPress(true);
+  swMode.enableDoublePress(false);
 
   swSet.begin();
   swSet.enableRepeat(false);
@@ -404,7 +407,7 @@ void loop(void)
   static enum stateRun_t    // loop() FSM states
   { 
     SR_UPDATE,        // update the display
-    SR_IDLE,          // waiting for time to update
+    SR_IDLE,          // waiting to update display
     SR_SETUP,         // run the time setup
     SR_SUMMER_TIME,   // toggle summer time indicator
     SR_FULL_SCALE     // show full scale test mode
@@ -447,7 +450,7 @@ void loop(void)
     state = SR_UPDATE;
     break;
 
-  case SR_SUMMER_TIME:  // handle the summer time selection
+  case SR_SUMMER_TIME:  // handle the summer time toggle
     flipSummerMode();
     state = SR_UPDATE;
     break;
