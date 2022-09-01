@@ -1,7 +1,7 @@
-// Program to implement a Clock display using Analog Panel Meters.
+// Program to implement a Clock display using Analog Panel Meters (APM).
 // by Marco Colli
 //
-// Auust 2022 - version 1.0
+// September 2022 - version 1.0
 // - Initial release
 //
 // Hardware Requirements
@@ -89,11 +89,12 @@ const uint32_t CLOCK_UPDATE_TIME = 1000;  // in milliseconds - time resolution t
 #endif
 const uint32_t SETUP_TIMEOUT = 60000;     // in milliseconds - timeout for setup inactivity
 const uint32_t SHOW_DELAY_TIME = 5000;    // in milliseconds - timeout for showing time mode
-const uint32_t INIT_CHECK_TIME = 1000;    // in milliseconds - initilization check per display
+const uint32_t INIT_CHECK_TIME = 1000;    // in milliseconds - initialization check per display
 
 // --------------------------------------
-// PWM setting for each tick mark on each meter
-// Defined in a table to allow for non-linear meter movements
+// PWM setting for each tick mark on each meter.
+// Defined in a table to allow for non-linear meter movements or 
+// small adjustments if required
 
 const PROGMEM uint8_t PWM_M[MIN_PER_HR] = 
 { 
@@ -103,15 +104,18 @@ const PROGMEM uint8_t PWM_M[MIN_PER_HR] =
  153, 157, 162, 166, 170, 174, 179, 183, 187, 191, 196, 200,  // 36 - 47
  204, 208, 213, 217, 221, 225, 230, 234, 238, 242, 247, 251   // 48 - 59
 };
+
 const PROGMEM uint8_t PWM_H[HR_PER_DAY] = 
 {
- 0, 21, 43, 64, 85, 106, 128, 149, 170, 191, 213, 234, 255,  //  0 - 12
- 21, 43, 64, 85, 106, 128, 149, 170, 191, 213, 234           // 13 - 23
+  0, 21, 43, 64, 85, 106, 128, 149, 170, 191, 213, 234, 255,  //  0 - 12
+     21, 43, 64, 85, 106, 128, 149, 170, 191, 213, 234        // 13 - 23 remap to 1 - 11
 };
+
 const PROGMEM uint8_t PWM_DW[DAY_PER_WK] =
 {
  0, 42, 85, 128, 170, 213, 255   // Mo, Tu, ... Sa, Su
 };
+
 const PROGMEM uint8_t PWM_DD[31] = 
 {
    0,   9,  17,  26,  34,  43,  51,  //  1 - 7
@@ -120,6 +124,7 @@ const PROGMEM uint8_t PWM_DD[31] =
  179, 187, 196, 204, 213, 221, 230,  // 22 - 28
  238, 247, 255                       // 29 - 31
 };
+
 const PROGMEM uint8_t PWM_MM[MTH_PER_YEAR] =
 {
  0, 23, 46, 70, 93, 116, 139, 162, 185, 208, 232, 255  // Jan - Dec
@@ -163,21 +168,19 @@ void flipSummerMode(void)
   // handle EEPROM changes
   EEPROM.write(EE_SUMMER_FLAG, isSummerMode() ? 0 : 1);
   PRINT("\nNew Summer Mode ", isSummerMode());
-
-  // now show the current offset on the display
-  //mapOffset(map, (isSummerMode() ? 1 : 0));
 }
 
 uint8_t daysInMonth(uint8_t month)
 {
-  static const PROGMEM uint8_t DAY_PER_MTH[MTH_PER_YEAR] =  // max days per month
+  static const PROGMEM uint8_t DAY_PER_MTH[MTH_PER_YEAR] =  // max days possible per month
   { 
     31, 29, 31, 30, 31, 30,   // Jan - Jun
     31, 31, 30, 31, 30, 31    // Jul - Dec
   };
   uint8_t days = 0;
 
-  if (month <= 12)
+  month--;
+  if (month < MTH_PER_YEAR)
     days = pgm_read_byte(DAY_PER_MTH + month);
 
     return(days);
@@ -212,28 +215,34 @@ void dumpTime()
     case 5: PRINTS("Fri"); break;
     case 6: PRINTS("Sat"); break;
     case 7: PRINTS("Sun"); break;
+    default: PRINT("?", RTC.dow);
   }
   if (RTC.dd < 10) PRINT(" 0", RTC.dd); else PRINT(" ", RTC.dd);
   if (RTC.mm < 10) PRINT("/0", RTC.mm); else PRINT("/", RTC.mm);
 }
 
-void showTime(const uint8_t idx, const pinId pin, const uint8_t sizeData, const uint8_t* data)
+void setAPM(const uint8_t idx, const pinId pin, const uint8_t sizeData, const uint8_t* data)
 // Show the time on the display meters
 {
   uint8_t aValue = 255;
 
-  //PRINT(" (V,P,A):", idx); PRINT(",", pins[pin]); PRINT(",", pgm_read_byte(data + idx));
   if (idx < sizeData)
     aValue = pgm_read_byte(data + idx);
   analogWrite(pins[pin], aValue);
 }
 
-void setDisplays(uint8_t pwmValue)
+void SetAllAPM(uint8_t pwmValue)
 // set all displays to the same value
 {
   for (uint8_t i = 0; i < PIN_MAX; i++)
     analogWrite(pins[i], pwmValue);
 }
+
+void inline setHour(uint8_t h)   { setAPM(adjustedHour(h), PIN_H, sizeof(PWM_H), PWM_H); }
+void inline setMinute(uint8_t m) { setAPM(m, PIN_M, sizeof(PWM_M), PWM_M); }
+void inline setDoW(uint8_t dw)   { setAPM(dw - 1, PIN_DW, sizeof(PWM_DW), PWM_DW); }
+void inline setDate(uint8_t dd)  { setAPM(dd - 1, PIN_DD, sizeof(PWM_DD), PWM_DD); }
+void inline setMonth(uint8_t mm) { setAPM(mm - 1, PIN_MM, sizeof(PWM_MM), PWM_MM); }
 
 void updateClock(uint8_t h, uint8_t m, uint8_t dw, uint8_t dd, uint8_t mm)
 {
@@ -241,16 +250,11 @@ void updateClock(uint8_t h, uint8_t m, uint8_t dw, uint8_t dd, uint8_t mm)
   dumpTime();  // debug output only
 #endif
 
-  //PRINTS("\nH "); 
-  showTime(adjustedHour(h), PIN_H, sizeof(PWM_H), PWM_H);
-  //PRINTS("\nM "); 
-  showTime(m, PIN_M, sizeof(PWM_M), PWM_M);
-  //PRINTS("\nDW "); 
-  showTime(dw - 1, PIN_DW, sizeof(PWM_DW), PWM_DW);
-  //PRINTS("\nDD "); 
-  showTime(dd - 1, PIN_DD, sizeof(PWM_DD), PWM_DD);
-  //PRINTS("\nMM "); 
-  showTime(mm - 1, PIN_MM, sizeof(PWM_MM), PWM_MM);
+  setHour(h);
+  setMinute(m);
+  setDoW(dw);
+  setDate(dd);
+  setMonth(mm);
 }
 
 bool configTime(uint8_t& h, uint8_t& m, uint8_t& dw, uint8_t& dd, uint8_t& mm)
@@ -258,13 +262,13 @@ bool configTime(uint8_t& h, uint8_t& m, uint8_t& dw, uint8_t& dd, uint8_t& mm)
 // Remains in this function until completed (finished == true)
 // Return true if the time was fully set, false otherwise (eg, timeout)
 {
-  bool result = false;
+  bool gotResult = false;
   bool finished = false;
-  pinId thisElement = PIN_MM;
+  pinId curItem = PIN_MM;
   uint32_t  timeLastActivity = millis();
 
   PRINTS("\nStarting setup");
-  setDisplays(0);   // blank everything out
+  SetAllAPM(0);   // blank everything out
 
   do
   {
@@ -273,33 +277,33 @@ bool configTime(uint8_t& h, uint8_t& m, uint8_t& dw, uint8_t& dd, uint8_t& mm)
     if (swMode.read() == MD_UISwitch::KEY_PRESS)
     {
       timeLastActivity = millis();
-      thisElement = (pinId)(thisElement + 1);
-      PRINT("\nSetup: ", thisElement);
+      curItem = (pinId)(curItem + 1);
+      PRINT("\nSetup: ", curItem);
 
-      if (thisElement == PIN_MAX)
+      if (curItem >= PIN_MAX)
       {
         PRINTS("\nSetup completed");
-        finished = result = true;
+        finished = gotResult = true;
       }
       else
       {
         // otherwise reset all the meters to zero so the relevant
-        // element will update with the current value
+        // element can update with the current value
         PRINTS(" - Clearing display");
-        setDisplays(0);
+        SetAllAPM(0);
       }
     }
 
     // process the current element
     MD_UISwitch::keyResult_t key = swSet.read();
 
-    if (key != MD_UISwitch::KEY_NULL)   // valid key was detected
-      timeLastActivity = millis();
+    if (key != MD_UISwitch::KEY_NULL)   // keypress occurred ...
+      timeLastActivity = millis();      // ... reset timeout
 
-    switch (thisElement)
+    switch (curItem)
     {
     case PIN_MM:   // month
-      showTime(mm - 1, PIN_MM, sizeof(PWM_MM), PWM_MM);
+      setMonth(mm);
       if (key == MD_UISwitch::KEY_PRESS)
       {
         mm++;
@@ -309,7 +313,7 @@ bool configTime(uint8_t& h, uint8_t& m, uint8_t& dw, uint8_t& dd, uint8_t& mm)
       break;
 
     case PIN_DD:   // date
-      showTime(dd - 1, PIN_DD, sizeof(PWM_DD), PWM_DD);
+      setDate(dd);
       if (key == MD_UISwitch::KEY_PRESS)
       {
         dd++;
@@ -319,7 +323,7 @@ bool configTime(uint8_t& h, uint8_t& m, uint8_t& dw, uint8_t& dd, uint8_t& mm)
       break;
 
     case PIN_DW:   // day of week
-      showTime(dw - 1, PIN_DW, sizeof(PWM_DW), PWM_DW);
+      setDoW(dw);
       if (key == MD_UISwitch::KEY_PRESS)
       {
         dw++;
@@ -329,22 +333,22 @@ bool configTime(uint8_t& h, uint8_t& m, uint8_t& dw, uint8_t& dd, uint8_t& mm)
       break;
 
     case PIN_H:    // hours
-      showTime(adjustedHour(h), PIN_H, sizeof(PWM_H), PWM_H);
-      showTime(RTC.h >= 12 ? 59 : 0, PIN_M, sizeof(PWM_M), PWM_M);   // show AM or PM
+      setHour(h);
+      if (h >= HR_PER_DAY/2) setMinute(MIN_PER_HR-1); else setMinute(0);   // show AM or PM
       if (key == MD_UISwitch::KEY_PRESS)
       {
         h++;
-        if (h > HR_PER_DAY) h = 1;
+        if (h >= HR_PER_DAY) h = 0;
         PRINT("\nH:", h);
       }
       break;
 
     case PIN_M:    // minutes
-      showTime(m, PIN_M, sizeof(PWM_M), PWM_M);
+      setMinute(m);
       if (key == MD_UISwitch::KEY_PRESS)
       {
         m++;
-        if (m >= MIN_PER_HR) m = 1;
+        if (m >= MIN_PER_HR) m = 0;
         PRINT("\nM:", m);
       }
       break;
@@ -352,7 +356,7 @@ bool configTime(uint8_t& h, uint8_t& m, uint8_t& dw, uint8_t& dd, uint8_t& mm)
     default:
       // should never get here, but if we do set to 
       // something sensible that will end the cycle.
-      thisElement = PIN_MM;
+      curItem = PIN_MM;
       break;
     }
 
@@ -364,7 +368,7 @@ bool configTime(uint8_t& h, uint8_t& m, uint8_t& dw, uint8_t& dd, uint8_t& mm)
     }
   } while (!finished);
 
-  return(result);
+  return(gotResult);
 }
 
 void setup(void)
@@ -394,9 +398,9 @@ void setup(void)
   RTC.control(DS3231_CLOCK_HALT, DS3231_OFF); // start the clock
 
   // flash the displays
-  setDisplays(255);
+  SetAllAPM(255);
   delay(INIT_CHECK_TIME);
-  setDisplays(0);
+  SetAllAPM(0);
 
   PRINT("\nSummer Mode ", isSummerMode());
 }
@@ -456,7 +460,7 @@ void loop(void)
     break;
 
   case SR_FULL_SCALE:  // force the display to full scale
-    setDisplays(255);
+    SetAllAPM(255);
 
     if (swSet.read() == MD_UISwitch::KEY_UP)
       state = SR_UPDATE;

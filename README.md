@@ -1,4 +1,4 @@
-A Clock built using Analog Panel Meters.
+# A Clock built using Analog Panel Meters
 
 Time is kept using a DS3231 clock modules with a I2C interface.
 
