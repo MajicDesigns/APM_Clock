@@ -16,7 +16,7 @@
 //
 // The display is implemented using 5 analog panel meters, usually used to display
 // Voltage or Current (eg, for a power supply). The 5 meters display Hours, Minutes,
-// Day of Week, Date and Month with the faces relabelled to show:
+// Day of Week, Date and Month with the faces relabeled to show:
 // - Hour: 0 thru 12
 // - Minute: 0 thru 60
 // - Day of week: Monday thru Sunday
@@ -38,6 +38,8 @@
 // 
 // Long press the MODE switch toggles summer time mode for easy set/reset.
 // Press the SET switch to show full scale on all meters, release to show time.
+//
+// More details at https://arduinoplusplus.wordpress.com/2022/09/06/analog-panel-meter-clock/
 //
 // Library dependencies:
 // ---------------------

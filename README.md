@@ -13,4 +13,4 @@ Allows setting the time using a MODE and SET switch, with an inactivity timeout.
 
 Long press the MODE switch toggles summer time mode for easy set/reset and depressing the SET switch will show full scale on all meters (test mode).
 
-More information on the Word Clock can be found in the blog article "Analog Panel Meter Clock" at the [Arduino++ blog](https://arduinoplusplus.wordpress.com/)
+More information on the Word Clock can be found in the blog article [Arduino++ blog](https://arduinoplusplus.wordpress.com/2022/09/06/analog-panel-meter-clock/)
